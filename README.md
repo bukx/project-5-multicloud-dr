@@ -1,5 +1,7 @@
 # 🌍 Multi-Cloud Infrastructure with Automated Disaster Recovery
 
+![Validate](https://github.com/bukx/project-5-multicloud-dr/actions/workflows/validate.yml/badge.svg)
+
 ![AWS](https://img.shields.io/badge/AWS-FF9900?style=flat&logo=amazonaws&logoColor=white)
 ![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat&logo=microsoftazure&logoColor=white)
 ![GCP](https://img.shields.io/badge/GCP-4285F4?style=flat&logo=googlecloud&logoColor=white)

@@ -1,0 +1,34 @@
+---
+- name: Cross-cloud server hardening
+  hosts: all
+  become: true
+  tasks:
+    - name: Install common packages
+      ansible.builtin.package:
+        name: [curl, jq, htop, net-tools, unzip]
+        state: present
+
+    - name: Disable root SSH login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PermitRootLogin"
+        line: "PermitRootLogin no"
+      notify: restart sshd
+
+    - name: Set SSH idle timeout
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?ClientAliveInterval"
+        line: "ClientAliveInterval 300"
+      notify: restart sshd
+
+    - name: Install Datadog agent
+      ansible.builtin.shell: |
+        DD_API_KEY={{ datadog_api_key }} DD_SITE="datadoghq.com" \
+        bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
+      args:
+        creates: /etc/datadog-agent/datadog.yaml
+
+  handlers:
+    - name: restart sshd
+      ansible.builtin.service: { name: sshd, state: restarted }

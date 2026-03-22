@@ -1,0 +1,6 @@
+name: multicloud-dr-gcp
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: GCP infrastructure for multi-cloud DR project

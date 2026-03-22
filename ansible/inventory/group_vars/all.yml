@@ -1,0 +1,6 @@
+---
+datadog_api_key: "{{ vault_datadog_api_key }}"
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+ssh_max_auth_tries: 4

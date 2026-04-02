@@ -55,11 +55,11 @@ resource "aws_route53_health_check" "aws" {
 }
 
 resource "aws_route53_record" "primary" {
-  zone_id            = var.hosted_zone_id
-  name               = "app.example.com"
-  type               = "A"
-  set_identifier     = "aws-primary"
-  Health_check_id    = aws_route53_health_check.aws.id
+  zone_id         = var.hosted_zone_id
+  name            = "app.example.com"
+  type            = "A"
+  set_identifier  = "aws-primary"
+  Health_check_id = aws_route53_health_check.aws.id
 
   failover_routing_policy {
     type = "PRIMARY"
@@ -73,12 +73,12 @@ resource "aws_route53_record" "primary" {
 }
 
 resource "aws_route53_record" "secondary" {
-  zone_id            = var.hosted_zone_id
-  name               = "app.example.com"
-  type               = "A"
-  ttl                = 60
-  set_identifier     = "azure-secondary"
-  records            = [var.azure_lb_ip]
+  zone_id        = var.hosted_zone_id
+  name           = "app.example.com"
+  type           = "A"
+  ttl            = 60
+  set_identifier = "azure-secondary"
+  records        = [var.azure_lb_ip]
 
   failover_routing_policy {
     type = "SECONDARY"

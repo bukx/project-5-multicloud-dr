@@ -50,13 +50,13 @@ resource "azurerm_kubernetes_cluster" "main" {
   kubernetes_version  = "1.29"
 
   default_node_pool {
-    name           = "default"
-    node_count     = 3
-    vm_size        = "Standard_D4s_v3"
-    vnet_subnet_id = azurerm_subnet.aks.id
+    name                = "default"
+    node_count          = 3
+    vm_size             = "Standard_D4s_v3"
+    vnet_subnet_id      = azurerm_subnet.aks.id
     enable_auto_scaling = true
-    min_count      = 2
-    max_count      = 6
+    min_count           = 2
+    max_count           = 6
   }
 
   identity { type = "SystemAssigned" }

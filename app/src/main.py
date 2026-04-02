@@ -1,8 +1,10 @@
 """Simple web app deployed identically across AWS, Azure, and GCP."""
-import os, socket
+import os
+import socket
 from fastapi import FastAPI
 
 app = FastAPI(title="Multi-Cloud App")
+
 
 @app.get("/health")
 async def health():
@@ -12,6 +14,7 @@ async def health():
         "region": os.getenv("CLOUD_REGION", "unknown"),
         "hostname": socket.gethostname(),
     }
+
 
 @app.get("/")
 async def root():

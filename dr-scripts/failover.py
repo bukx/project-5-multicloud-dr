@@ -6,20 +6,35 @@ Usage:
     python failover.py --target aws --reason "Restore primary"
     python failover.py --target gcp --dry-run --reason "DR drill"
 """
-import os, sys, time, argparse, logging, requests, boto3
+import os
+import sys
+import time
+import argparse
+import logging
+import requests
+import boto3
 from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("dr-failover")
 
 CLOUDS = {
-    "aws":   {"region": "us-east-1", "health": "https://app-aws.example.com/health",
-              "alb_dns": os.getenv("AWS_ALB_DNS", "aws-alb.us-east-1.elb.amazonaws.com"),
-              "alb_zone": os.getenv("AWS_ALB_ZONE", "Z35SXDOTRQ7X7K")},
-    "azure": {"region": "eastus", "health": "https://app-azure.example.com/health",
-              "ip": os.getenv("AZURE_LB_IP", "20.120.45.67")},
-    "gcp":   {"region": "us-central1", "health": "https://app-gcp.example.com/health",
-              "ip": os.getenv("GCP_LB_IP", "34.120.78.90")},
+    "aws": {
+        "region": "us-east-1",
+        "health": "https://app-aws.example.com/health",
+        "alb_dns": os.getenv("AWS_ALB_DNS", "aws-alb.us-east-1.elb.amazonaws.com"),
+        "alb_zone": os.getenv("AWS_ALB_ZONE", "Z35SXDOTRQ7X7K"),
+    },
+    "azure": {
+        "region": "eastus",
+        "health": "https://app-azure.example.com/health",
+        "ip": os.getenv("AZURE_LB_IP", "20.120.45.67"),
+    },
+    "gcp": {
+        "region": "us-central1",
+        "health": "https://app-gcp.example.com/health",
+        "ip": os.getenv("GCP_LB_IP", "34.120.78.90"),
+    },
 }
 ZONE_ID = os.getenv("ROUTE53_ZONE_ID", "Z1234567890")
 RECORD = "app.example.com"
@@ -41,7 +56,10 @@ def check_health(cloud: str) -> bool:
 def promote_database(cloud: str):
     logger.info(f"Promoting database replica on {cloud}...")
     if cloud == "azure":
-        os.system("az postgres flexible-server replica stop-replication --name ecommerce-db-azure --resource-group prod-rg")
+        os.system(
+            "az postgres flexible-server replica stop-replication"
+            " --name ecommerce-db-azure --resource-group prod-rg"
+        )
     elif cloud == "gcp":
         os.system("gcloud sql instances promote-replica ecommerce-db-gcp --quiet")
 
@@ -50,16 +68,31 @@ def update_dns(target: str):
     r53 = boto3.client("route53")
     cfg = CLOUDS[target]
     if target == "aws":
-        record = {"Type": "A", "Name": RECORD,
-                  "AliasTarget": {"DNSName": cfg["alb_dns"], "HostedZoneId": cfg["alb_zone"], "EvaluateTargetHealth": True}}
+        record = {
+            "Type": "A",
+            "Name": RECORD,
+            "AliasTarget": {
+                "DNSName": cfg["alb_dns"],
+                "HostedZoneId": cfg["alb_zone"],
+                "EvaluateTargetHealth": True,
+            },
+        }
     else:
-        record = {"Type": "A", "Name": RECORD, "TTL": 60, "ResourceRecords": [{"Value": cfg["ip"]}]}
+        record = {
+            "Type": "A",
+            "Name": RECORD,
+            "TTL": 60,
+            "ResourceRecords": [{"Value": cfg["ip"]}],
+        }
 
     logger.info(f"Updating DNS: {RECORD} → {target}")
-    r53.change_resource_record_sets(HostedZoneId=ZONE_ID, ChangeBatch={
-        "Comment": f"DR failover to {target}",
-        "Changes": [{"Action": "UPSERT", "ResourceRecordSet": record}]
-    })
+    r53.change_resource_record_sets(
+        HostedZoneId=ZONE_ID,
+        ChangeBatch={
+            "Comment": f"DR failover to {target}",
+            "Changes": [{"Action": "UPSERT", "ResourceRecordSet": record}],
+        },
+    )
 
 
 def verify(target: str, retries=12, interval=10) -> bool:
@@ -80,15 +113,22 @@ def notify(target: str, reason: str, ok: bool):
     status = "SUCCESS" if ok else "FAILED"
     ts = datetime.now(timezone.utc).isoformat()
     if DD_KEY:
-        requests.post("https://api.datadoghq.com/api/v1/events",
-                      headers={"DD-API-KEY": DD_KEY},
-                      json={"title": f"DR Failover {status}: → {target}",
-                            "text": f"Reason: {reason}\nTime: {ts}",
-                            "alert_type": "success" if ok else "error",
-                            "tags": [f"cloud:{target}", "type:dr-failover"]})
+        requests.post(
+            "https://api.datadoghq.com/api/v1/events",
+            headers={"DD-API-KEY": DD_KEY},
+            json={
+                "title": f"DR Failover {status}: → {target}",
+                "text": f"Reason: {reason}\nTime: {ts}",
+                "alert_type": "success" if ok else "error",
+                "tags": [f"cloud:{target}", "type:dr-failover"],
+            },
+        )
     if SLACK_HOOK:
         emoji = ":white_check_mark:" if ok else ":x:"
-        requests.post(SLACK_HOOK, json={"text": f"{emoji} *DR {status}* → `{target}` | {reason} | {ts}"})
+        requests.post(
+            SLACK_HOOK,
+            json={"text": f"{emoji} *DR {status}* → `{target}` | {reason} | {ts}"},
+        )
 
 
 def main():
@@ -99,7 +139,10 @@ def main():
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
-    logger.info(f"{'='*60}\nDR FAILOVER → {args.target.upper()}\nReason: {args.reason}\n{'='*60}")
+    logger.info(
+        f"{'='*60}\nDR FAILOVER → {args.target.upper()}\n"
+        f"Reason: {args.reason}\n{'='*60}"
+    )
 
     logger.info("[1/5] Checking health...")
     if not check_health(args.target):
@@ -126,6 +169,7 @@ def main():
     else:
         logger.error("\n✗ Verification failed. Manual intervention required.")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

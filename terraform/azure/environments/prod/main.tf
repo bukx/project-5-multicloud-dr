@@ -8,8 +8,18 @@ terraform {
     key                  = "azure/prod/terraform.tfstate"
   }
 }
-provider "azurerm" { features {} }
-locals { project = "multicloud-dr"; tags = { Project = local.project, ManagedBy = "terraform", Cloud = "azure" } }
+provider "azurerm" {
+  features {}
+}
+
+locals {
+  project = "multicloud-dr"
+  tags = {
+    Project   = local.project
+    ManagedBy = "terraform"
+    Cloud     = "azure"
+  }
+}
 
 resource "azurerm_resource_group" "main" {
   name     = "${local.project}-rg"
@@ -76,6 +86,15 @@ resource "azurerm_postgresql_flexible_server" "main" {
   geo_redundant_backup_enabled = true
 }
 
-variable "db_password" { type = string; sensitive = true }
-output "aks_cluster_name" { value = azurerm_kubernetes_cluster.main.name }
-output "db_fqdn"          { value = azurerm_postgresql_flexible_server.main.fqdn }
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+output "aks_cluster_name" {
+  value = azurerm_kubernetes_cluster.main.name
+}
+
+output "db_fqdn" {
+  value = azurerm_postgresql_flexible_server.main.fqdn
+}

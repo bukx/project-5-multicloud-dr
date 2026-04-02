@@ -27,8 +27,14 @@ locals {
   }
 }
 
+module "vpc" {
+  source  = "../../../modules/vpc"
+  project = local.project
+  tags    = local.tags
+}
+
 module "eks" {
-  source       = "../../modules/eks"
+  source       = "../../../modules/eks"
   cluster_name = "${local.project}-aws"
   vpc_id       = module.vpc.vpc_id
   subnet_ids   = module.vpc.private_subnet_ids
@@ -36,7 +42,7 @@ module "eks" {
 }
 
 module "rds" {
-  source     = "../../modules/rds"
+  source     = "../../../modules/rds"
   identifier = "${local.project}-db-aws"
   multi_az   = true
   vpc_id     = module.vpc.vpc_id
@@ -59,7 +65,7 @@ resource "aws_route53_record" "primary" {
   name            = "app.example.com"
   type            = "A"
   set_identifier  = "aws-primary"
-  Health_check_id = aws_route53_health_check.aws.id
+  health_check_id = aws_route53_health_check.aws.id
 
   failover_routing_policy {
     type = "PRIMARY"

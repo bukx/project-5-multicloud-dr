@@ -15,31 +15,7 @@ Production multi-cloud deployment across **AWS, Azure, and GCP** with **automate
 
 ## 🏗 Architecture
 
-```
-                    ┌──────────────┐
-                    │   Route 53   │
-                    │  (Global DNS)│
-                    └──────┬───────┘
-            ┌──────────────┼──────────────┐
-            │              │              │
-     ┌──────▼──────┐ ┌────▼────┐  ┌──────▼──────┐
-     │  AWS (EKS)  │ │  Azure  │  │  GCP (GKE)  │
-     │  PRIMARY    │ │  (AKS)  │  │             │
-     │             │ │ STANDBY │  │   STANDBY   │
-     └──────┬──────┘ └────┬────┘  └──────┬──────┘
-            │              │              │
-     ┌──────▼──────────────▼──────────────▼──────┐
-     │         Datadog Unified Monitoring         │
-     │    Metrics | Logs | APM | Synthetics       │
-     └─────────────────────┬─────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Failover   │
-                    │  Automation │
-                    │  (Python)   │
-                    └─────────────┘
-                    Slack Notifications
-```
+![Architecture Diagram](docs/architecture.png)
 
 ## 🔧 Tech Stack
 
